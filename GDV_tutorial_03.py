@@ -5,9 +5,9 @@ import cv2
 cap = cv2.VideoCapture(0)
 
 # get camera image parameters from get()
-width = int(cap.get(cv2.cv2.CAP_PROP_FRAME_WIDTH))
-height = int(cap.get(cv2.cv2.CAP_PROP_FRAME_HEIGHT))
-codec = int(cap.get(cv2.cv2.CAP_PROP_CODEC_PIXEL_FORMAT))
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+codec = int(cap.get(cv2.CAP_PROP_CODEC_PIXEL_FORMAT))
 print ('Video properties:')
 print ('  Width = ' + str(width))
 print ('  Height = ' + str(height))
