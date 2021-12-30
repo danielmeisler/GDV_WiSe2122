@@ -22,6 +22,7 @@ hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 # create a mask
 mask = cv2.inRange(hsv, lower_green, upper_green)
 
+
 ## morphological operations code
 # optional mapping of values with morphological shapes
 def morph_shape(val):
