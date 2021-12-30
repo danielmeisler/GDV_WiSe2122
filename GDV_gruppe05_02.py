@@ -21,93 +21,41 @@ num_green = 2
 num_red = 6
 gt_list = (num_red, num_green, num_blue, num_yellow, num_white, num_pink)
 
-# define color ranges in HSV, note that OpenCV uses the following ranges H: 0-179, S: 0-255, V: 0-255
-blue_hsv = (97, 175, 134)
-green_hsv = (41, 245, 135)
-red_hsv = (173, 115, 170)
-yellow_hsv = (28, 255, 255)
-pink_hsv = (0, 39, 255)
-white_hsv = (29, 0, 255)
+# configration of the colors
+# name, hue, hue_range, saturation, saturation_range, value, value_range, kernel_size, kernel_shape, morph_operation, morph_iteration
+blue = ('blue', 97, 4, 175, 100, 135, 100, 3, cv2.MORPH_ELLIPSE, 'none')
+green = ('green', 41, 6, 245, 100, 135, 100, 3, cv2.MORPH_ELLIPSE, 'none')
+yellow = ('yellow', 28, 5, 255, 100, 200, 60, 2, cv2.MORPH_ELLIPSE, 'none')
+red = ('red', 173, 15, 115, 100, 170, 100, 4, cv2.MORPH_ELLIPSE,'morph_red')
+pink = ('pink',0, 9, 45, 100, 255, 100, 2, cv2.MORPH_ELLIPSE,'morph_pink')
+white =('white', 29, 6, 0, 100, 255, 100, 2, cv2.MORPH_ELLIPSE,'morph_white')
 
-# morphological operations
-# optional mapping of values with morphological shapes
-
-
-def morph_shape(val):
-    if val == 0:
-        return cv2.MORPH_RECT
-    elif val == 1:
-        return cv2.MORPH_CROSS
-    elif val == 2:
-        return cv2.MORPH_ELLIPSE
+# all colors in one array
+color_configuration = (red,green,blue,yellow,white,pink)
 
 # dilation with parameters
-
-
 def dilatation(img, size, shape):
     element = cv2.getStructuringElement(shape, (2 * size + 1, 2 * size + 1),
                                         (size, size))
-    return cv2.dilate(img, element, iterations=2)
+    return cv2.dilate(img, element)
 
 # erosion with parameters
-
-
 def erosion(img, size, shape):
     element = cv2.getStructuringElement(shape, (2 * size + 1, 2 * size + 1),
                                         (size, size))
-    return cv2.erode(img, element, iterations=2)
-
-# dilation with parameters
-
-
-def dilatation_red(img, size, shape):
-    element = cv2.getStructuringElement(shape, (2 * size + 1, 2 * size + 1),
-                                        (size, size))
-    return cv2.dilate(img, element, iterations=3)
-
-# erosion with parameters
-
-
-def erosion_red(img, size, shape):
-    element = cv2.getStructuringElement(shape, (2 * size + 1, 2 * size + 1),
-                                        (size, size))
-    return cv2.erode(img, element, iterations=4)
+    return cv2.erode(img, element)
 
 # opening
-
-
 def opening(img, size, shape):
     element = cv2.getStructuringElement(shape, (2 * size + 1, 2 * size + 1),
                                         (size, size))
     return cv2.morphologyEx(img, cv2.MORPH_OPEN, element)
 
 # closing
-
-
 def closing(img, size, shape):
     element = cv2.getStructuringElement(shape, (2 * size + 1, 2 * size + 1),
                                         (size, size))
     return cv2.morphologyEx(img, cv2.MORPH_CLOSE, element)
-
-
-# setting the parameters
-kernel_shape = morph_shape(2)
-kernel_size = 2
-
-# set color under test
-color_names = ['red', 'green', 'blue', 'yellow', 'white', 'pink']
-color_hsv = [red_hsv, green_hsv, blue_hsv, yellow_hsv, white_hsv, pink_hsv]
-
-# setting the parameters that work for all colors
-hue_range = 7
-saturation_range = 95
-value_range = 95
-
-# set individual (per color) parameters
-#adjustments for color red
-hue_range_red = 10
-saturation_range_red = 100
-value_range_red = 100
 
 num_test_images_succeeded = 0
 for img_name in glob.glob('Images/chewing_gum_balls*.jpg'):
@@ -115,46 +63,45 @@ for img_name in glob.glob('Images/chewing_gum_balls*.jpg'):
     print('Searching for colored balls in image:', img_name)
 
     all_colors_correct = True
-
-    for c in range(0, len(color_hsv)):
-
+    for c in range(0, len(color_configuration)):
         img = cv2.imread(img_name, cv2.IMREAD_COLOR)
         height = img.shape[0]
         width = img.shape[1]
- 
+
         # convert to HSV
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         # TODO: Insert your algorithm here
-        if (color_hsv[c] == red_hsv):
-            #if color is red
-            lower_color = np.array([color_hsv[c][0] - hue_range_red, color_hsv[c]
-                               [1] - saturation_range_red, color_hsv[c][2] - value_range_red])
-            upper_color = np.array([color_hsv[c][0] + hue_range_red, color_hsv[c]
-                               [1] + saturation_range_red, color_hsv[c][2] + value_range_red])
-             # create a mask
-            mask = cv2.inRange(hsv, lower_color, upper_color)
-            #kernel
-            kernel_size = 4
-            # morph
-            mask = dilatation_red(mask, kernel_size, kernel_shape)
-            mask = erosion_red(mask, kernel_size, kernel_shape)
-        
-        else:
-            lower_color = np.array([color_hsv[c][0] - hue_range, color_hsv[c]
-                               [1] - saturation_range, color_hsv[c][2] - value_range])
-            upper_color = np.array([color_hsv[c][0] + hue_range, color_hsv[c]
-                               [1] + saturation_range, color_hsv[c][2] + value_range])
-            #kernel
-            kernel_size = 2 
-             # create a mask
-            mask = cv2.inRange(hsv, lower_color, upper_color)
-            # morph
-            mask = erosion(mask, kernel_size, kernel_shape)
-            mask = dilatation(mask, kernel_size, kernel_shape)
+        lower_color = np.array([color_configuration[c][1] - color_configuration[c][2], 
+                                color_configuration[c][3] - color_configuration[c][4], 
+                                color_configuration[c][5] - color_configuration[c][6]])
+        upper_color = np.array([color_configuration[c][1] + color_configuration[c][2], 
+                                color_configuration[c][3] + color_configuration[c][4], 
+                                color_configuration[c][5] + color_configuration[c][6]])
+        # create a mask
+        mask = cv2.inRange(hsv, lower_color, upper_color)
+        # specific morph
+        if(color_configuration[c][9] == "morph_red"):
+            for i in range(3):
+                mask = dilatation(mask, color_configuration[c][7], color_configuration[c][8])
+            for i in range(4):
+                mask = erosion(mask, color_configuration[c][7], color_configuration[c][8])
+        if(color_configuration[c][9] == "morph_white"):
+            for i in range(2):
+                mask = dilatation(mask, color_configuration[c][7], color_configuration[c][8])
+            for i in range(3):
+                mask = erosion(mask, color_configuration[c][7], color_configuration[c][8])
+        if(color_configuration[c][9] == "morph_pink"):
+            #for i in range(1):
+            #    mask = dilatation(mask, color_configuration[c][7], color_configuration[c][8])
+            for i in range(1):
+                mask = erosion(mask, color_configuration[c][7], color_configuration[c][8])
+        # generel morph
+        mask = opening(mask, color_configuration[c][7], color_configuration[c][8])
+        # variables for counting
         connectivity = 8
         (num_labels, labels, stats, centroids) = cv2.connectedComponentsWithStats(
-            mask, connectivity, cv2.CV_32S)
+                                                    mask, connectivity, cv2.CV_32S)
 
         # TODO: implement something to set this variable
         min_size = 10
@@ -195,15 +142,14 @@ for img_name in glob.glob('Images/chewing_gum_balls*.jpg'):
 
         if success:
             print('We have found all', str(num_final_labels), '/',
-                  str(gt_list[c]), color_names[c], 'chewing gum balls. Yeah!')
-            foo = 0
+                  str(gt_list[c]), color_configuration[c][0]  , 'chewing gum balls. Yeah!')
         elif (num_final_labels > int(gt_list[c])):
             print('We have found too many (', str(num_final_labels), '/',
-                  str(gt_list[c]), ') candidates for', color_names[c], 'chewing gum balls. Damn!')
+                  str(gt_list[c]), ') candidates for', color_configuration[c][0], 'chewing gum balls. Damn!')
             all_colors_correct = False
         else:
             print('We have not found enough (', str(num_final_labels), '/',
-                  str(gt_list[c]), ') candidates for', color_names[c], 'chewing gum balls. Damn!')
+                  str(gt_list[c]), ') candidates for', color_configuration[c][0], 'chewing gum balls. Damn!')
             all_colors_correct = False
 
         # debug output of the test images
@@ -212,11 +158,12 @@ for img_name in glob.glob('Images/chewing_gum_balls*.jpg'):
                 or (img_name == 'Images\chewing_gum_balls06.jpg')):
             # show the original image with drawings in one window
             cv2.imshow('Original image', img)
+
             # show other images!
             cv2.imshow('Masked Image', mask)
             # q for fast quit
             if cv2.waitKey(0) == ord('q'):
-                break  
+                break
             cv2.destroyAllWindows()
     if all_colors_correct:
         num_test_images_succeeded += 1
